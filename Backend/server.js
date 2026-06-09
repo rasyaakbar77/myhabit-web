@@ -67,7 +67,7 @@ app.post('/api/auth/login', (req, res) => {
 
 app.get('/api/tasks/history', (req, res) => {
     const query = `
-        SELECT tasks.*, history_logs.created_at AS completed_at 
+        SELECT tasks.*, history_logs.id AS log_id, history_logs.created_at AS completed_at 
         FROM tasks 
         INNER JOIN history_logs ON tasks.id = history_logs.target_id 
         WHERE tasks.is_completed = 1 AND history_logs.action_type = 'TASK_COMPLETE'
@@ -75,6 +75,20 @@ app.get('/api/tasks/history', (req, res) => {
     db.query(query, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
+    });
+});
+
+// Undo tugas spesifik berdasarkan task ID dan log ID
+app.post('/api/history/undo-by-id', (req, res) => {
+    const { taskId, logId } = req.body;
+    if (!taskId || !logId) return res.status(400).json({ message: 'taskId dan logId wajib diisi!' });
+
+    db.query('UPDATE tasks SET is_completed = 0 WHERE id = ?', [taskId], (taskErr) => {
+        if (taskErr) return res.status(500).json({ error: taskErr.message });
+        db.query('DELETE FROM history_logs WHERE id = ?', [logId], (popErr) => {
+            if (popErr) return res.status(500).json({ error: popErr.message });
+            res.json({ message: 'Tugas berhasil dikembalikan ke daftar aktif!' });
+        });
     });
 });
 

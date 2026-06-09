@@ -80,7 +80,7 @@
 
                     <div class="content-grid">
                         <div class="card">
-                            <h3>Riwayat Penyelesaian Tugas (Stack LIFO)</h3>
+                            <h3>Riwayat Penyelesaian Tugas</h3>
                             <div id="task-history-box" style="margin-top: 15px;">Memuat riwayat...</div>
                         </div>
                         <div class="card">
@@ -290,10 +290,49 @@
             const history = await r.json();
             const box = document.getElementById('task-history-box');
             box.innerHTML = '';
-            if(history.length === 0) { box.innerHTML = '<p style="color:#a0aec0;">Belum ada riwayat riil.</p>'; return; }
+            if(history.length === 0) {
+                box.innerHTML = `
+                    <div style="text-align:center; padding:30px 0; color:#a0aec0;">
+                        <div style="font-size:36px; margin-bottom:10px;">📭</div>
+                        <p style="font-size:14px;">Belum ada tugas yang diselesaikan.</p>
+                    </div>`;
+                return;
+            }
             history.forEach(h => {
-                box.innerHTML += `<div style="background:#edf2f7; padding:10px; margin-bottom:6px; border-radius:6px; font-size:14px;">✅ <strong>${h.title}</strong> - <small>${new Date(h.completed_at).toLocaleTimeString()}</small></div>`;
+                const waktu = new Date(h.completed_at);
+                const tanggal = waktu.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+                const jam = waktu.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+                const priorityColor = h.priority === 3 ? '#e53e3e' : h.priority === 2 ? '#dd6b20' : '#3182ce';
+                const priorityLabel = h.priority === 3 ? '🔴 Penting' : h.priority === 2 ? '🟡 Sedang' : '🔵 Santai';
+                box.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f7fafc; padding:14px 16px; margin-bottom:8px; border-radius:8px; border-left:4px solid ${priorityColor}; transition: background 0.2s;" onmouseover="this.style.background='#edf2f7'" onmouseout="this.style.background='#f7fafc'">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="font-size:20px;">✅</span>
+                            <div>
+                                <div style="font-weight:600; font-size:14px; color:#2d3748;">${h.title}</div>
+                                <div style="display:flex; gap:8px; align-items:center; margin-top:3px;">
+                                    <span style="font-size:12px; color:#718096;">${tanggal} · ${jam}</span>
+                                    <span style="font-size:11px; font-weight:600; padding:2px 7px; border-radius:4px; background:${priorityColor}20; color:${priorityColor};">${priorityLabel}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-action" style="background:#e53e3e; font-size:12px; padding:7px 13px; white-space:nowrap; flex-shrink:0;" onclick="undoTugasById(${h.id}, ${h.log_id})">↩ Undo</button>
+                    </div>`;
             });
+        }
+
+        async function undoTugasById(taskId, logId) {
+            const r = await fetch(`${API_URL}/history/undo-by-id`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId, logId })
+            });
+            const res = await r.json();
+            if(r.ok) {
+                refreshSemuaData();
+            } else {
+                alert(res.message || 'Gagal melakukan undo.');
+            }
         }
 
         async function muatKategoriTree() {
