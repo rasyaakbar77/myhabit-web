@@ -19,10 +19,58 @@ body {
 
 /* ── SIDEBAR STYLE ── */
 .sidebar {
-    width: 250px;
+    width: 260px;
     background-color: #ffffff;
     border-right: 1px solid #e2e8f0;
     padding: 30px 20px;
+}
+
+/* Kotak pembungkus Logo & Judul menggunakan Flexbox */
+.sidebar-header {
+    display: flex;
+    align-items: center; /* Membuat logo & tulisan sejajar lurus di tengah secara vertikal */
+    gap: 12px;           /* Memberi jarak horizontal antara logo dan tulisan */
+    margin-bottom: 40px; /* Jarak dari header ke daftar menu bawah */
+    width: 100%;
+}
+
+/* Mengatur Logo Web */
+.sidebar-logo {
+    width: 45px;         /* Ukuran lebar logo diperbesar */
+    height: 45px;        /* Ukuran tinggi logo */
+    object-fit: contain; /* Memastikan gambar tidak gepeng */
+}
+
+/* Mengatur Tulisan Judul Web di Samping Logo */
+.sidebar-title {
+    font-size: 26px;     /* Ukuran teks diperbesar */
+    font-weight: 700;    /* Membuat teks jadi tebal/bold */
+    color: #2d3748;      /* Warna abu-abu gelap estetik */
+    margin: 0;           /* Menghapus margin bawaan h1 agar tidak merusak posisi */
+    line-height: 1;
+}
+
+.sidebar-menu {
+    list-style: none;
+}
+
+.sidebar-menu li {
+    margin-bottom: 10px;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 12px 15px;
+    color: #718096;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sidebar-menu a.active, .sidebar-menu a:hover {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
 }
 
 .sidebar h2 {
@@ -181,4 +229,128 @@ body {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
+}
+
+/* Styling Tambahan untuk Tombol Ikonik agar Rapi */
+.task-item {
+    transition: all 0.2s ease;
+}
+.task-item:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
+}
+.btn-action {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    color: white;
+    transition: opacity 0.2s;
+}
+.btn-action:hover {
+    opacity: 0.85;
+}
+
+/* ── CUSTOM TREE VIEW STYLE ── */
+#category-tree-box {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.tree-root {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #ebf8ff;
+    color: #2b6cb0;
+    font-weight: 600;
+    border-radius: 6px;
+    margin-top: 8px;
+    border-left: 4px solid #3182ce;
+}
+
+.tree-child {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px 4px 25px; /* Jarak geser ke kanan */
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tree-line {
+    color: #cbd5e1;
+    margin-right: 6px;
+    font-weight: bold;
+}
+
+.tree-icon {
+    font-size: 16px;
+    user-select: none;
+}
+
+.tree-text {
+    letter-spacing: 0.3px;
+}
+
+/* ── AUTH CONTAINER STYLE ── */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f7fafc;
+}
+
+.auth-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    width: 360px;
+    text-align: center;
+}
+
+.auth-card h2 {
+    margin-bottom: 25px;
+    color: #2d3748;
+}
+
+.auth-card p {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #718096;
+}
+
+.auth-card a {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ── MULTI-VIEW TAB VISIBILITY ── */
+.view-content {
+    display: none; /* Sembunyikan semua tab secara default */
+}
+
+.view-content.active-view {
+    display: block; /* Hanya tampilkan tab yang aktif */
+}
+
+/* ── BUTTON LOGOUT STYLE ── */
+.btn-logout {
+    margin-top: auto; /* Mendorong tombol logout ke bagian bawah sidebar */
+    background-color: #fff5f5;
+    color: #e53e3e !important;
+}
+.btn-logout:hover {
+    background-color: #fed7d7 !important;
 }
