@@ -136,10 +136,7 @@
                 </div>
             </div>
 
-            <div id="undo-notification-bar" style="display:none; background:#2d3748; color:white; padding:15px; position:fixed; bottom:20px; right:20px; border-radius:8px; gap:15px; align-items:center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <span id="undo-msg-text">Aksi berhasil dicatat.</span>
-                <button onclick="eksekusiUndoAksi()" style="background:#ecc94b; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">UNDO</button>
-            </div>
+
 
         </main>
     </div>
@@ -477,27 +474,11 @@
             refreshSemuaData();
         }
 
-        async function muatUndoBar() {
-            const r = await fetch(`${API_URL}/history/top`);
-            const topLog = await r.json();
-            const bar = document.getElementById('undo-notification-bar');
-            if(topLog) {
-                bar.style.display = 'flex';
-                document.getElementById('undo-msg-text').innerText = `Tugas diselesaikan pada ${new Date(topLog.created_at).toLocaleTimeString()}`;
-            } else { bar.style.display = 'none'; }
-        }
-
-        async function eksekusiUndoAksi() {
-            await fetch(`${API_URL}/history/undo`, { method: 'POST' });
-            refreshSemuaData();
-        }
-
-        function refreshSemuaData() {
+function refreshSemuaData() {
             muatDaftarTugas();
             muatRiwayatTugas();
             muatKategoriTree();
             muatHabitTracker();
-            muatUndoBar();
         }
 
         function bukaModalTambah() { document.getElementById('taskModal').style.display = 'flex'; }
