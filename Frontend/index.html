@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyHabit Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>MyHabit</h2>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active">To-Do Manager</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h2>Dashboard MyHabit</h2>
+                <button class="btn-primary" onclick="bukaModal()">+ Tambah Tugas</button>
+            </div>
+
+            <div class="content-grid">
+                <div class="card">
+                    <h3>Daftar Tugas Aktif</h3>
+                    <div id="task-list-box">Memuat tugas...</div>
+                </div>
+
+                <div class="card">
+                    <h3>Kategori (Tree)</h3>
+                    <div id="category-tree-box">Memuat kategori...</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 25px;">
+                <h3>Habit Tracker (Linear Tracker)</h3>
+                <div id="habit-list-box" style="margin-top: 15px;">
+                    </div>
+            </div>
+
+            <div id="undo-bar" style="margin-top:20px; padding:15px; background:#edf2f7; border-radius:8px; display:none; justify-content:space-between; align-items:center;">
+                <span id="undo-text" style="color:#4a5568; font-size:14px;">Aksi terakhir terdeteksi...</span>
+                <button class="btn-primary" style="background:#e53e3e;" onclick="eksekusiUndo()">Undo Aksi</button>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <h3>Tambah Tugas Baru</h3>
+            <form id="formTambahTugas" onsubmit="simpanTugasBaru(event)">
+                <div class="form-group">
+                    <label for="taskTitle">Judul Tugas</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskPriority">Tingkat Prioritas</label>
+                    <select id="taskPriority" required>
+                        <option value="5">P5 (Sangat Tinggi)</option>
+                        <option value="4">P4 (Tinggi)</option>
+                        <option value="3">P3 (Sedang)</option>
+                        <option value="2">P2 (Rendah)</option>
+                        <option value="1">P1 (Sangat Rendah)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskCategory">Pilih Kategori</label>
+                    <select id="taskCategory">
+                        <option value="">Tanpa Kategori</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" style="background:#e2e8f0; color:#2d3748;" onclick="tutupModal()">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        // LOAD DAFTAR TUGAS
+        async function muatDaftarTugas() {
+            try {
+                const response = await fetch(`${API_URL}/tasks`);
+                const tasks = await response.json();
+                const container = document.getElementById('task-list-box');
+                container.innerHTML = '';
+                
+                if(tasks.length === 0) { container.innerHTML = '<p style="color:#718096;">Tidak ada tugas aktif.</p>'; return; }
+
+                tasks.forEach(task => {
+                    container.innerHTML += `
+                        <div class="task-item">
+                            <div>
+                                <span class="badge-priority">P${task.priority}</span>
+                                <strong style="margin-left: 10px;">${task.title}</strong>
+                            </div>
+                            <button class="btn-primary" style="background:#48bb78; cursor:pointer;" onclick="selesaikanTugas(${task.id})">Selesai</button>
+                        </div>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // LOAD KATEGORI TREE
+        async function muatKategoriTree() {
+            try {
+                const response = await fetch(`${API_URL}/categories`);
+                const categories = await response.json();
+                
+                const selectCategory = document.getElementById('taskCategory');
+                selectCategory.innerHTML = '<option value="">Tanpa Kategori</option>';
+                categories.forEach(c => selectCategory.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+
+                const treeBox = document.getElementById('category-tree-box');
+                treeBox.innerHTML = '';
+                const roots = categories.filter(c => !c.parent_id);
+                roots.forEach(root => {
+                    treeBox.innerHTML += `<p style="color:#4a5568; font-weight:bold; margin-top:5px;">> ${root.name}</p>`;
+                    categories.filter(c => c.parent_id === root.id).forEach(child => {
+                        treeBox.innerHTML += `<p style="margin-left: 20px; color:#718096;">└── ${child.name}</p>`;
+                    });
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // LOAD MODUL HABIT TRACKER (BARU)
+        async function muatHabitTracker() {
+            try {
+                const response = await fetch(`${API_URL}/habits`);
+                const habits = await response.json();
+                const container = document.getElementById('habit-list-box');
+                container.innerHTML = '';
+
+                habits.forEach(h => {
+                    container.innerHTML += `
+                        <div class="task-item">
+                            <div>
+                                <strong>${h.name}</strong> 
+                                <span style="margin-left:15px; color:#dd6b20;">🔥 ${h.streak_count} Hari Streak</span>
+                            </div>
+                            <button class="btn-primary" onclick="checkInHabit(${h.id})">Check-in ✔</button>
+                        </div>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // LOAD TOP OF STACK (UNDO LOG BARU)
+        async function muatUndoBar() {
+            try {
+                const response = await fetch(`${API_URL}/history/top`);
+                const topLog = await response.json();
+                const bar = document.getElementById('undo-bar');
+                const text = document.getElementById('undo-text');
+
+                if (topLog) {
+                    text.innerText = `Log Aksi: Menyelesaikan tugas (ID Target: ${topLog.target_id}). Ingin batalkan?`;
+                    bar.style.display = 'flex';
+                } else {
+                    bar.style.display = 'none';
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // AKSI TAMBAH TUGAS
+        async function simpanTugasBaru(e) {
+            e.preventDefault();
+            const title = document.getElementById('taskTitle').value;
+            const priority = document.getElementById('taskPriority').value;
+            const category_id = document.getElementById('taskCategory').value || null;
+
+            await fetch(`${API_URL}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, priority, category_id })
+            });
+            tutupModal();
+            document.getElementById('formTambahTugas').reset();
+            refreshSemuaData();
+        }
+
+        // AKSI SELESAIKAN TUGAS
+        async function selesaikanTugas(id) {
+            await fetch(`${API_URL}/tasks/${id}/complete`, { method: 'PUT' });
+            refreshSemuaData();
+        }
+
+        // AKSI CHECK-IN HABIT
+        async function checkInHabit(id) {
+            await fetch(`${API_URL}/habits/${id}/checkin`, { method: 'PUT' });
+            muatHabitTracker();
+        }
+
+        // AKSI UNDO BUTTON (POP STACK)
+        async function eksekusiUndo() {
+            const response = await fetch(`${API_URL}/history/undo`, { method: 'POST' });
+            const res = await response.json();
+            alert(res.message);
+            refreshSemuaData();
+        }
+
+        function refreshSemuaData() {
+            muatDaftarTugas();
+            muatKategoriTree();
+            muatHabitTracker();
+            muatUndoBar();
+        }
+
+        function bukaModal() { document.getElementById('taskModal').style.display = 'flex'; }
+        function tutupModal() { document.getElementById('taskModal').style.display = 'none'; }
+
+        window.onload = () => { refreshSemuaData(); };
+    </script>
+</body>
+</html>
